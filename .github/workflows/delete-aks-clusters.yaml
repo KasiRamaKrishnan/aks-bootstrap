@@ -1,0 +1,40 @@
+name: Delete 3 AKS Clusters (dev, qa, prod)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  delete-aks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Delete AKS DEV Cluster
+        run: |
+          echo "Deleting DEV cluster: ${{ secrets.DEV_CLUSTER_NAME }}"
+          az aks delete --name ${{ secrets.DEV_CLUSTER_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --yes --no-wait
+
+      - name: Delete AKS QA Cluster
+        run: |
+          echo "Deleting QA cluster: ${{ secrets.QA_CLUSTER_NAME }}"
+          az aks delete --name ${{ secrets.QA_CLUSTER_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --yes --no-wait
+
+      - name: Delete AKS PROD Cluster
+        run: |
+          echo "Deleting PROD cluster: ${{ secrets.PROD_CLUSTER_NAME }}"
+          az aks delete --name ${{ secrets.PROD_CLUSTER_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --yes --no-wait
+
+      # Optional: Delete the entire resource group if you want to clean up everything
+      # ⚠️ This will delete all resources inside the group (e.g., VNETs, public IPs, etc.)
+      - name: Delete Resource Group
+        if: ${{ secrets.DELETE_RG == 'true' }}
+        run: |
+          echo "Deleting entire resource group: ${{ secrets.RESOURCE_GROUP }}"
+          az group delete --name ${{ secrets.RESOURCE_GROUP }} --yes --no-wait
