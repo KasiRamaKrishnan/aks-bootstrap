@@ -34,7 +34,6 @@ jobs:
       # Optional: Delete the entire resource group if you want to clean up everything
       # ⚠️ This will delete all resources inside the group (e.g., VNETs, public IPs, etc.)
       - name: Delete Resource Group
-        if: ${{ secrets.DELETE_RG == 'true' }}
         run: |
           echo "Deleting entire resource group: ${{ secrets.RESOURCE_GROUP }}"
           az group delete --name ${{ secrets.RESOURCE_GROUP }} --yes --no-wait
