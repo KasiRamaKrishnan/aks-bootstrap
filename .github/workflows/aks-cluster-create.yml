@@ -1,0 +1,57 @@
+name: Create 3 AKS Clusters (dev, qa, prod)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-aks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Create Resource Group
+        run: |
+          az group create --name ${{ secrets.RESOURCE_GROUP }} --location ${{ secrets.LOCATION }}
+
+      - name: Create AKS DEV Cluster
+        run: |
+          az aks create --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.DEV_CLUSTER_NAME }} \
+          --node-count 1 --enable-managed-identity --generate-ssh-keys
+
+      - name: Create AKS QA Cluster
+        run: |
+          az aks create --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.QA_CLUSTER_NAME }} \
+          --node-count 1 --enable-managed-identity --generate-ssh-keys
+
+      - name: Create AKS PROD Cluster
+        run: |
+          az aks create --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.PROD_CLUSTER_NAME }} \
+          --node-count 1 --enable-managed-identity --generate-ssh-keys
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+      - name: Verify DEV Cluster Connection
+        run: |
+          az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.DEV_CLUSTER_NAME }} --overwrite-existing
+          kubectl get nodes
+
+      - name: Verify QA Cluster Connection
+        run: |
+          az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.QA_CLUSTER_NAME }} --overwrite-existing
+          kubectl get nodes
+
+      - name: Verify PROD Cluster Connection
+        run: |
+          az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.PROD_CLUSTER_NAME }} --overwrite-existing
+          kubectl get nodes
